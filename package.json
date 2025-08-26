@@ -1,0 +1,45 @@
+{
+  "name": "project-foundation",
+  "version": "1.0.0",
+  "description": "Universal foundation for various projects with modern tech stack",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend",
+    "shared"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "build": "npm run build --workspaces",
+    "build:backend": "npm run build --workspace=backend",
+    "build:frontend": "npm run build --workspace=frontend",
+    "test": "npm run test --workspaces",
+    "lint": "npm run lint --workspaces",
+    "format": "npm run format --workspaces",
+    "clean": "npm run clean --workspaces",
+    "setup": "npm run setup:backend && npm run setup:frontend",
+    "setup:backend": "npm install --workspace=backend",
+    "setup:frontend": "npm install --workspace=frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "keywords": [
+    "foundation",
+    "boilerplate",
+    "fullstack",
+    "typescript",
+    "fastify",
+    "nextjs",
+    "supabase"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}

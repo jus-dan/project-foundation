@@ -1,0 +1,132 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: project_foundation_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: project_foundation
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+    networks:
+      - project_foundation_network
+
+  # Redis (Optional - for sessions/caching)
+  redis:
+    image: redis:7-alpine
+    container_name: project_foundation_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - project_foundation_network
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: project_foundation_backend
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/project_foundation
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+      - COOKIE_SECRET=your-cookie-secret-key-change-this-in-production
+      - PORT=3001
+      - HOST=0.0.0.0
+      - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
+      - LOG_LEVEL=info
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      - db
+      - redis
+    networks:
+      - project_foundation_network
+    command: npm run dev
+
+  # Frontend App
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: project_foundation_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+      - NEXT_PUBLIC_APP_NAME=Project Foundation
+      - NEXT_PUBLIC_APP_VERSION=1.0.0
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+    networks:
+      - project_foundation_network
+    command: npm run dev
+
+  # Prisma Studio (Database GUI)
+  prisma-studio:
+    image: node:18-alpine
+    container_name: project_foundation_prisma_studio
+    restart: unless-stopped
+    ports:
+      - "5555:5555"
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/project_foundation
+    depends_on:
+      - db
+    networks:
+      - project_foundation_network
+    command: npx prisma studio --hostname 0.0.0.0 --port 5555
+
+  # Nginx (Optional - for production-like setup)
+  nginx:
+    image: nginx:alpine
+    container_name: project_foundation_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - project_foundation_network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  project_foundation_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
