@@ -17,6 +17,20 @@ import {
 export default function HomePage() {
   const [activeFeature, setActiveFeature] = useState(0);
 
+  // Backend-Verbindung testen
+  const testBackendConnection = async () => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://project-foundation-production.up.railway.app';
+      const response = await fetch(`${apiUrl}/health`);
+      const data = await response.json();
+      console.log('✅ Backend verbunden:', data);
+      alert(`✅ Backend verbunden!\nStatus: ${data.status}\nZeit: ${data.timestamp}`);
+    } catch (error) {
+      console.error('❌ Backend-Verbindung fehlgeschlagen:', error);
+      alert('❌ Backend-Verbindung fehlgeschlagen!\nFehler: ' + error.message);
+    }
+  };
+
   const features = [
     {
       icon: <Rocket className="w-8 h-8" />,
@@ -97,6 +111,18 @@ export default function HomePage() {
               Eine moderne, skalierbare Grundlage für alle Ihre Projekte. 
               Mit TypeScript, Fastify, Next.js und Supabase.
             </p>
+            
+            {/* Backend-Test Button */}
+            <div className="mb-8">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={testBackendConnection}
+                className="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 mr-4"
+              >
+                Backend-Verbindung testen
+              </motion.button>
+            </div>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <motion.button
