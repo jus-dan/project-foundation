@@ -80,7 +80,7 @@ export async function errorHandler(
     return reply.status(429).send({
       error: 'Too Many Requests',
       message: 'Zu viele Anfragen. Bitte warten Sie einen Moment.',
-      retryAfter: error.headers?.['retry-after']
+      retryAfter: (error as any).headers?.['retry-after']
     });
   }
 
@@ -97,7 +97,7 @@ export async function errorHandler(
   }
 
   // Default error response
-  const isDevelopment = process.env.NODE_ENV === 'development';
+  const isDevelopment = process.env['NODE_ENV'] === 'development';
   
   return reply.status(500).send({
     error: 'Internal Server Error',

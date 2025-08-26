@@ -57,7 +57,7 @@ async function registerPlugins() {
   await fastify.register(rateLimit, {
     max: 100,
     timeWindow: '1 minute',
-    errorResponseBuilder: (request, context) => ({
+    errorResponseBuilder: (_request, context) => ({
       code: 429,
       error: 'Too Many Requests',
       message: `Rate limit exceeded, retry in ${context.after}`,
@@ -76,7 +76,7 @@ async function registerPlugins() {
 
   // Cookies
   await fastify.register(cookie, {
-    secret: process.env.COOKIE_SECRET || 'your-cookie-secret',
+    secret: process.env['COOKIE_SECRET'] || 'your-cookie-secret',
   });
 
   // Swagger documentation
@@ -87,7 +87,7 @@ async function registerPlugins() {
         description: 'Universal foundation API for various projects',
         version: '1.0.0',
       },
-      host: process.env.API_HOST || 'localhost:3001',
+      host: process.env['API_HOST'] || 'localhost:3001',
       schemes: ['http', 'https'],
       consumes: ['application/json'],
       produces: ['application/json'],
@@ -108,16 +108,16 @@ async function registerPlugins() {
       deepLinking: false,
     },
     uiHooks: {
-      onRequest: function (request, reply, next) {
+      onRequest: function (_request, _reply, next) {
         next();
       },
-      preHandler: function (request, reply, next) {
+      preHandler: function (_request, _reply, next) {
         next();
       },
     },
     staticCSP: true,
     transformStaticCSP: (header) => header,
-    transformSpecification: (swaggerObject, request, reply) => {
+    transformSpecification: (swaggerObject, _request, _reply) => {
       return swaggerObject;
     },
     transformSpecificationClone: true,
@@ -127,7 +127,7 @@ async function registerPlugins() {
 // Register routes
 async function registerRoutes() {
   // Health check
-  fastify.get('/health', async (request, reply) => {
+  fastify.get('/health', async (_request, _reply) => {
     return { status: 'ok', timestamp: new Date().toISOString() };
   });
 
@@ -143,8 +143,8 @@ async function registerRoutes() {
   fastify.register(async function (fastify) {
     fastify.addHook('preHandler', authenticateToken);
     
-    fastify.get('/api/protected', async (request, reply) => {
-      return { message: 'This is a protected route', user: request.user };
+    fastify.get('/api/protected', async (_request, _reply) => {
+      return { message: 'This is a protected route', user: _request.user };
     });
   });
 }
@@ -161,7 +161,7 @@ const gracefulShutdown = async (signal: string) => {
     fastify.log.info('Server closed successfully');
     process.exit(0);
   } catch (err) {
-    fastify.log.error('Error during shutdown:', err);
+    console.error('Error during shutdown:', err);
     process.exit(1);
   }
 };
@@ -175,15 +175,15 @@ async function start() {
     await registerPlugins();
     await registerRoutes();
     
-    const port = parseInt(process.env.PORT || '3001');
-    const host = process.env.HOST || '0.0.0.0';
+    const port = parseInt(process.env['PORT'] || '3001');
+    const host = process.env['HOST'] || '0.0.0.0';
     
     await fastify.listen({ port, host });
     
     fastify.log.info(`Server is running on http://${host}:${port}`);
     fastify.log.info(`API Documentation available at http://${host}:${port}/docs`);
   } catch (err) {
-    fastify.log.error('Error starting server:', err);
+    console.error('Error starting server:', err);
     process.exit(1);
   }
 }

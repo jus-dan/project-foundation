@@ -109,7 +109,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
       reply.setCookie('token', token, {
         path: '/',
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: process.env['NODE_ENV'] === 'production',
         sameSite: 'lax',
         maxAge: 7 * 24 * 60 * 60 // 7 days
       });
@@ -218,8 +218,8 @@ export default async function authRoutes(fastify: FastifyInstance) {
           email,
           username,
           password: hashedPassword,
-          firstName,
-          lastName,
+          firstName: firstName || null,
+          lastName: lastName || null,
           userRoles: {
             create: {
               role: {
@@ -280,7 +280,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
         }
       }
     }
-  }, async (request: FastifyRequest, reply: FastifyReply) => {
+  }, async (_request: FastifyRequest, reply: FastifyReply) => {
     // Clear cookie
     reply.clearCookie('token', { path: '/' });
     
@@ -371,7 +371,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
       }
 
       // Generate reset token (in production, use a proper token service)
-      const resetToken = require('crypto').randomBytes(32).toString('hex');
+      // const resetToken = require('crypto').randomBytes(32).toString('hex');
       
       // Store reset token (in production, use a proper token storage)
       // For now, we'll just return a success message
@@ -425,7 +425,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
     }
   }, async (request: FastifyRequest, reply: FastifyReply) => {
     try {
-      const { token, password } = resetPasswordSchema.parse(request.body);
+      const { token: _token, password: _password } = resetPasswordSchema.parse(request.body);
 
       // In production, validate the token and find the user
       // For now, we'll just return a success message
